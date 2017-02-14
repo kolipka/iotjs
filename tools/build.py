@@ -14,12 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-try:
-    basestring
-except:
-    # in Python 3.x there is no basestring just str
-    basestring = str
 
 import argparse
 import json
@@ -39,7 +33,7 @@ platform = Platform()
 # Initialize build option.
 def init_option():
     # Check config option.
-    arg_config = list(filter(lambda x: x.startswith('--config='), sys.argv))
+    arg_config = filter(lambda x: x.startswith('--config='), sys.argv)
 
     config_path = path.BUILD_CONFIG_PATH
 
@@ -49,8 +43,8 @@ def init_option():
     # Read config file and apply it to argv.
     argv = []
     config = {}
-    with open(config_path, 'rb') as f:
-        config = json.loads(f.read().decode('ascii'))
+    with open(config_path, 'r') as f:
+        config = json.loads(f.read().encode('ascii'))
         config_option = config['build_option']
         for opt_key in config_option:
             opt_val = config_option[opt_key]
@@ -87,7 +81,7 @@ def init_option():
                         default=platform.arch())
 
     parser.add_argument('--target-os',
-                        choices=['linux', 'darwin', 'osx', 'nuttx'],
+                        choices=['linux', 'darwin', 'osx', 'nuttx', 'tizen'],
                         default=platform.os())
 
     parser.add_argument('--target-board', default='')
@@ -189,11 +183,11 @@ def adjust_option(option):
 
 
 def print_build_option(option):
-    print('=================================================')
+    print '================================================='
     option_vars = vars(option)
     for opt in option_vars:
-        print(' --%s: %s ' % (opt, option_vars[opt]))
-    print()
+        print ' --%s: %s ' % (opt, option_vars[opt])
+    print
 
 
 def set_global_vars(option):
@@ -278,7 +272,8 @@ def create_build_directories(option):
 
 
 def print_progress(msg):
-    print('==> %s\n' % msg)
+    print '==> %s' % msg
+    print
 
 
 def init_submodule():
@@ -428,7 +423,7 @@ def build_jerry(option):
     # Check output
     output = target_jerry['output_path']
     if not fs.exists(output):
-        print(output)
+        print output
         ex.fail('JerryScript build failed - target not produced.')
 
     # copy
@@ -462,7 +457,7 @@ def build_libjerry(option):
         if option.target_arch == 'arm':
             cmake_opt.append('-DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=arm')
 
-    if option.target_os == 'linux':
+    if option.target_os == 'linux' or option.target_os == 'tizen':
         cmake_opt.append('-DJERRY_LIBC=OFF')
         cmake_opt.append('-DJERRY_LIBM=OFF')
 
@@ -521,7 +516,7 @@ def build_libjerry(option):
         # Check output
         output = target['output_path']
         if not fs.exists(output):
-            print(output)
+            print output
             ex.fail('JerryScript build failed - target not produced.')
 
         # copy
@@ -550,7 +545,7 @@ def build_libhttpparser(option):
     if option.target_os == 'nuttx':
         cmake_opt.append('-DNUTTX_HOME=' + option.nuttx_home)
         cmake_opt.append('-DOS=NUTTX')
-    if option.target_os == 'linux':
+    if option.target_os == 'linux' or option.target_os == 'tizen':
         cmake_opt.append('-DOS=LINUX')
 
     # inflate cmake option.
@@ -580,7 +575,7 @@ def build_libhttpparser(option):
 def analyze_module_dependency(option):
 
     def print_warn(fmt, arg):
-        print(fmt % arg)
+        print fmt % arg
         ex.fail('Failed to analyze module dependency')
 
     for name in option.config['module']['always']:
@@ -620,7 +615,7 @@ def analyze_module_dependency(option):
             print_warn('Cannot read file \"%s\" ', js_module_path)
         content = open(js_module_path).read()
 
-        re_js_module = 'require\([\'\"](.*?)[\'\"]\)'
+        re_js_module = 'require\([\'\"](.*)[\'\"]\)'
         for js_module in re.findall(re_js_module, content):
             if js_module in option.iotjs_exclude_module:
                 print_warn('Cannot exclude \"%s\" since \"%s\" requires it',
@@ -628,7 +623,7 @@ def analyze_module_dependency(option):
             if js_module not in js_modules:
                 analyze_queue.add(js_module)
 
-        re_native_module = 'process.binding\(process.binding.(.*?)\)'
+        re_native_module = 'process.binding\(process.binding.(.*)\)'
         for native_module in re.findall(re_native_module, content):
             native_modules.add(native_module)
 
@@ -637,8 +632,9 @@ def analyze_module_dependency(option):
     option.js_modules = js_modules
     option.native_modules = native_modules
 
-    print('Building js modules: %s\nBuilding native modules: %s\n' \
-          % (', '.join(js_modules), ', '.join(native_modules)))
+    print 'Building js modules: %s\nBuilding native modules: %s' \
+          % (', '.join(js_modules), ', '.join(native_modules))
+    print
 
     return True
 
@@ -804,14 +800,18 @@ if not option.no_check_test:
     # Run check test when target is host.
     if (option.target_os != platform.os() or
             option.target_arch != platform.arch()):
-        print("Skip unit tests - target is not host\n")
+        print "Skip unit tests - target is not host"
+        print
     elif option.buildlib:
-        print("Skip unit tests - build target is library\n")
+        print "Skip unit tests - build target is library"
+        print
     else:
         if not run_checktest(option):
             ex.fail('Failed to pass unit tests')
 
 
-print("\n%sIoT.js Build Succeeded!!%s\n" % (ex._TERM_GREEN, ex._TERM_EMPTY))
+print
+print "%sIoT.js Build Succeeded!!%s" % (ex._TERM_GREEN, ex._TERM_EMPTY)
+print
 
 sys.exit(0)

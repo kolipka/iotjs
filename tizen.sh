@@ -1,0 +1,1 @@
+tools/build.py --buildtype=debug --target-arch=arm --target-os=tizen --target-board=artik10 --compile-flag="--sysroot=/home/k.lipner/tizen-studio/platforms/tizen-3.0/mobile/rootstraps/mobile-3.0-device.core/" 
