@@ -33,6 +33,8 @@ from common_py.system.filesystem import FileSystem as fs
 from common_py.system.executor import Executor as ex
 from common_py.system.platform import Platform
 
+print("BUILD ARGS: ", sys.argv)
+
 platform = Platform()
 
 
@@ -744,7 +746,6 @@ def run_checktest(option):
             ex.fail('Failed to pass unit tests in valgrind environment')
     return True
 
-
 # Initialize build option object.
 option = init_option()
 
@@ -813,5 +814,6 @@ if not option.no_check_test:
 
 
 print("\n%sIoT.js Build Succeeded!!%s\n" % (ex._TERM_GREEN, ex._TERM_EMPTY))
+
 
 sys.exit(0)
